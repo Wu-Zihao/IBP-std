@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "iostream": "cpp",
+        "ostream": "cpp",
+        "typeinfo": "cpp",
+        "array": "cpp",
+        "functional": "cpp",
+        "*.tcc": "cpp",
+        "tuple": "cpp",
+        "vector": "cpp",
+        "memory": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
+    }
+}
