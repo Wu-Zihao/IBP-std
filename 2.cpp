@@ -2,6 +2,8 @@
 #include <ginac/ginac.h>
 #include <unistd.h>
 #include <ctime>
+#include <cstdlib>
+#include <chrono>
 using namespace std;
 using namespace GiNaC;
 #define SDim 9
@@ -11,10 +13,25 @@ symbol n1("n1"),n2("n2"),n3("n3"),n4("n4"),n5("n5"),n6("n6"),n7("n7"),n8("n8"),n
 ex zlist=lst{z1,z2,z3,z4,z5,z6,z7,z8,z9};
 ex wlist=lst{w1,w2,w3,w4,w5,w6,w7,w8,w9};
 ex nlist=lst{n1,n2,n3,n4,n5,n6,n7,n8,n9};
-double timer1,timer2;
+symbol s("s"),d("d"),t("t"),mm("mm");
+ex vars=lst{s,t,d,mm};
+ex testex;
+clock_t start_timer3=clock();
+clock_t end_timer3;
+double timer1,timer2,timer3;
 int counter;
+int NormalPer=1000000;
+long RandRange=10000;
 
-
+string current_time_str(){
+    auto now = chrono::system_clock::now();
+    time_t now_c = chrono::system_clock::to_time_t(now);
+    tm* now_tm = localtime(&now_c);
+    ostringstream oss;
+    oss << put_time(now_tm, "%Y-%m-%d %H:%M:%S");
+    string formatted_time = oss.str();
+    return formatted_time;
+}
 bool SameIndexQ(int* a,int* b,int indexLen){
     int i;
     for(i=0;i<indexLen;i++){
@@ -144,11 +161,70 @@ vector<ex> monomial_list(ex pol){
     }
     return monList;
 }
+ex random_rational(){
+    ex result;
+    long d,n;
+    n=rand()+1;
+    d=rand()+1;
+    result=n/d;
+    return result;
+}
+ex random_substitution(ex expression){
+    ex result;
+    result=expression;
+    int i;
+    for(i=0;i<SDim;i++){
+        result=result.subs(nlist[i]==((rand()%RandRange)+1));
+    }
+    for(i=0;i<vars.nops();i++){
+        result=result.subs(vars[i]==((rand()%RandRange)+1));
+    };
+    return result;
+}
+ex random_substitution_verbose(ex expression){
+    ex result;
+    ex rational;
+    result=expression;
+    int i;
+    for(i=0;i<SDim;i++){
+        rational=((rand()%RandRange)+1);
+        result=result.subs(nlist[i]==rational);
+        cout<<nlist[i]<<"="<<rational<<":"<<endl;
+        cout<<result<<endl;
+    }
+    for(i=0;i<vars.nops();i++){
+        rational=((rand()%RandRange)+1);
+        result=result.subs(vars[i]==rational);
+        cout<<vars[i]<<"="<<rational<<":"<<endl;
+        cout<<result<<endl;
+    };
+    return result;
+}
+ex random_zero_check(ex expression){
+    int i;
+    ex check;
+    for(i=0;i<3;i++){
+        check=random_substitution(expression);
+        if(check!=0)return expression;
+    }
+    if(false){//debug
+        cout<<counter<<endl;
+        cout<<expression<<endl;
+        if(expression!=0)testex=expression;
+    }
+    return 0;
+}
 //the simplification method in collect
 ex coeff_simplify(ex coeff){
     ex result;
     clock_t start=clock();
-    result=normal(coeff);
+    if(counter%NormalPer==0){
+        result=normal(coeff);
+    }
+    else{
+        result=random_zero_check(coeff);
+    }
+    
     clock_t end=clock();
     double duration = static_cast<double>(end - start) / CLOCKS_PER_SEC;
     timer1+=duration;
@@ -353,7 +429,6 @@ IndPol ind_pol_product(IndPol pol1,IndPol pol2){
     result.collect();
     return result;
 }
-
 IndPol operator+(IndMon mon1,IndMon mon2){
         IndPol result;
         result.set_from_indmon(mon1);
@@ -1038,8 +1113,14 @@ IndPolSetDivisionResult ind_pol_set_division(
     IndPolDivisionResult divisionResult1;
     IndPol q,newRemainder;
     while(true){
-        newRemainder=result.remainder;//I do not know why we need this
         
+        newRemainder=result.remainder;//I do not know why we need this
+        //cout<<"   "<<newRemainder.terms.size()<<":"<<current_time_str()<<endl;
+        //cout<<"           "<<"counter="<<counter<<endl;
+        //cout<<"           "<<"timer1="<<timer1<<endl;
+        //clock_t end_timer3=clock();//how long dose it take till curret position from the beginning of the run
+        //double timer3 = static_cast<double>(end_timer3 - start_timer3) / CLOCKS_PER_SEC;
+        //cout<<"           "<<"timer3="<<timer3<<endl;
         divisionResult1=ind_pol_division(newRemainder,polList[i],sector,orderingString);
         
         q=divisionResult1.quotient;
@@ -1172,6 +1253,7 @@ GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const cha
     //vector<vector<IndPol>> tmpMat;//debug
     vector<vector<IndPol>> pairT;
     while(queue.size()>0){
+        //cout<<"0"<<":"<<current_time_str()<<endl;
         pair=queue[0];
         if(settings.tracking)pairT=queueT[0];
         if(settings.tracking){
@@ -1181,12 +1263,14 @@ GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const cha
         else{
             sPol=ind_pol_spair(pair[0],pair[1],sector,orderingString);
         }
+        //cout<<"1"<<":"<<current_time_str()<<endl;
         divisionResult=ind_pol_set_division(sPol,blist,sector,orderingString);
+        //cout<<"2"<<":"<<current_time_str()<<endl;
         r=divisionResult.remainder;
         r.collect();//although collected, shall r be simplified? 
         //because, some "zero" coefficients might not be written as "0"
         //this also needs to be concerned in ind pol divisions
-        
+        //cout<<"3"<<":"<<current_time_str()<<endl;
         if(settings.tracking){
             cornerizeTrackTmp=(r.cornerize(sector));
             //returns the monomial used to cornerize,
@@ -1195,9 +1279,12 @@ GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const cha
         else{
             r.cornerize(sector);
         }
+        //cout<<"4"<<":"<<current_time_str()<<endl;
         if(r!=0){
             for(i=0;i<blist.size();i++){
+                //cout<<"4.5-a-"<<i<<":"<<current_time_str()<<endl;
                 queue.push_back({blist[i],r});
+                //cout<<"4.5-b-"<<i<<":"<<current_time_str()<<endl;
             }
             if(settings.tracking){
                 rT={};
@@ -1220,10 +1307,13 @@ GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const cha
                 }
                 transformation.push_back(rT);
             }
+            //cout<<"5"<<":"<<current_time_str()<<endl;
             blist.push_back(r);
+            //cout<<"6"<<":"<<current_time_str()<<endl;
             //ind_pol_set_display(blist,"blist:");
         }
         queue.erase(queue.begin());
+        //cout<<"7"<<":"<<current_time_str()<<endl;
         if(settings.tracking)queueT.erase(queueT.begin());
         if(settings.progress_indicator)cout<<"("<<queue.size()<<")"<<endl;
         //ind_pol_set_display(blist,"blist:");
@@ -1353,9 +1443,9 @@ GBResult ind_pol_GB(IndPolIdeal ideal,vector<int> sector, const char *orderingSt
 int main()
 {   
     GB_DEFAULT_SETTINGS.progress_indicator=true;
-    GB_DEFAULT_SETTINGS.tracking=true;
+    GB_DEFAULT_SETTINGS.tracking=false;
     IndMon m1,m2,m3;
-    symbol s("s"),d("d"),t("t"),mm("mm");
+    
     IndPol pol;
     vector<int> sector={1,1,1,1,1,1,1,1,1};
     pol=w3*(w1+w2);
@@ -1385,6 +1475,7 @@ int main()
         gb=gbResult;
     }
     timer1=0,timer2=0,counter=0;
+    
     clock_t start=clock();
     gbResult=ind_pol_GB(ibps,sector,"degree_reverse_lexicographic");
     clock_t end=clock();
@@ -1396,8 +1487,17 @@ int main()
     cout<<"counter="<<counter<<endl;
     cout<<"timer1="<<timer1<<endl;
     cout<<"timer2="<<timer2<<endl;
+
+
+
+    //ex testexx=testex;
+    //cout <<"test="<<testexx<<endl;
+    //cout << random_substitution_verbose(testexx)<<endl;
+    //cout << random_substitution(testexx)<<endl;
+    //cout<<normal(testexx)<<endl;
+    //cout << testexx.subs(n1==304874704)<<endl;
     
-    IndPolIdeal ideal;
+    //IndPolIdeal ideal;
     //gbResult=ind_pol_GB(ibps,sector,"degree_reverse_lexicographic");
     //gb=gbResult;
     
