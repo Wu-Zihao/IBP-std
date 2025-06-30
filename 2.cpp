@@ -6,21 +6,26 @@
 #include <chrono>
 using namespace std;
 using namespace GiNaC;
-#define SDim 9
+#define SDim 5
 symbol z1("z1"),z2("z2"),z3("z3"),z4("z4"),z5("z5"),z6("z6"),z7("z7"),z8("z8"),z9("z9");
 symbol w1("w1"),w2("w2"),w3("w3"),w4("w4"),w5("w5"),w6("w6"),w7("w7"),w8("w8"),w9("w9");
 symbol n1("n1"),n2("n2"),n3("n3"),n4("n4"),n5("n5"),n6("n6"),n7("n7"),n8("n8"),n9("n9");
-ex zlist=lst{z1,z2,z3,z4,z5,z6,z7,z8,z9};
-ex wlist=lst{w1,w2,w3,w4,w5,w6,w7,w8,w9};
-ex nlist=lst{n1,n2,n3,n4,n5,n6,n7,n8,n9};
+symbol m6("m6"),m7("m7"),m8("m8"),m9("m9"),m10("m10"),m11("m11"),m12("m12"),m13("m13"),m14("m14");
+symbol m15("m15"),m16("m16"),m17("m17"),m18("m18"),m19("m19"),m20("m20");
+//ex zlist=lst{z1,z2,z3,z4,z5,z6,z7,z8,z9};
+//ex wlist=lst{w1,w2,w3,w4,w5,w6,w7,w8,w9};
+//ex nlist=lst{n1,n2,n3,n4,n5,n6,n7,n8,n9};
+ex zlist=lst{z5,z4,z3,z2,z1};
+ex wlist=lst{w5,w4,w3,w2,w1};
+ex nlist=lst{n5,n4,n3,n2,n1};
 symbol s("s"),d("d"),t("t"),mm("mm");
-ex vars=lst{s,t,d,mm};
+ex vars=lst{m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20};
 ex testex;
 clock_t start_timer3=clock();
 clock_t end_timer3;
 double timer1,timer2,timer3;
 int counter;
-int NormalPer=1000000;
+long NormalPer=100000000000;
 long RandRange=10000;
 
 string current_time_str(){
@@ -1188,6 +1193,10 @@ void check_GB(
     cout<<"}"<<endl;
 }
 GBOptions GB_DEFAULT_SETTINGS;
+//The following functions are based on an analogy to Buchberger's algorithm
+//They are not recommended because they are slow:
+//1.ind_pol_Buchberger
+//2.ind_pol_GB
 GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const char *orderingString,GBOptions settings){
     GBResult result;
     vector<vector<IndPol>> queue;
@@ -1200,6 +1209,8 @@ GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const cha
     vector<IndPol> polsTmp;
     IndPol polTmp;
     IndMon cornerizeTrackTmp;
+    IndMon displayedIndMonForDebugOnly;
+    int indexForDebugOnly;
     transformation={};
     blist={};
     for(i=0;i<polList.size();i++){
@@ -1316,6 +1327,12 @@ GBResult ind_pol_Buchberger(vector<IndPol> polList,vector<int> sector, const cha
         //cout<<"7"<<":"<<current_time_str()<<endl;
         if(settings.tracking)queueT.erase(queueT.begin());
         if(settings.progress_indicator)cout<<"("<<queue.size()<<")"<<endl;
+        for(indexForDebugOnly=0;indexForDebugOnly<blist.size();indexForDebugOnly++){
+            displayedIndMonForDebugOnly=leading_term(blist[indexForDebugOnly],sector,orderingString);
+            displayedIndMonForDebugOnly.coeff=1;
+            cout<<"   LT(blist["<<indexForDebugOnly<<"])="<<endl;
+            displayedIndMonForDebugOnly.display("      ");
+        }
         //ind_pol_set_display(blist,"blist:");
     }
     result.basis=blist;
@@ -1440,6 +1457,109 @@ GBResult ind_pol_GB(IndPolIdeal ideal,vector<int> sector, const char *orderingSt
     return ind_pol_GB(ideal.gens,sector,orderingString);
 }
 
+GBResult ind_pol_set_self_reduction(vector<IndPol> polList,vector<int> sector, const char *orderingString,GBOptions settings)
+{
+    /*
+    This function is copied from ind_pol_GB and modified, to do: 
+        reduce a certain generator to other generators by division,
+        until no generator can be reduced by others
+    Notice:
+        the "tracking" part of this function is commented out and wait for future modification or developement if needed
+        currently these parts (commented out) are the same as ind_pol_GB, highly possible to be needing modifications, 
+        they are labelled by //TRACKERS
+        the transformation matrix of the result of this function is fixed as {}
+
+    */
+    GBResult result;
+    IndPolIdeal displayer;
+    vector<IndPol> blist,divisors,quotientsTmp;
+    vector<vector<IndPol>> transformation;
+    IndPol r;
+    IndPolSetDivisionResult divisionResult;
+    blist=polList;
+    //if(settings.tracking)transformation=result.transformationMatrix;//TRACKERS
+    int i=0,n=0,j,k;//n: how may times that the division changes nothing
+    while(true){
+        if(blist.size()<2)break;
+        if(i>=blist.size())i-=blist.size();//loop
+        divisors=blist;
+        divisors.erase(divisors.begin()+i);//do not divide by itself
+        divisionResult=ind_pol_set_division(blist[i],divisors,sector,orderingString);
+        r=divisionResult.remainder;
+        r.collect();
+        r.cornerize(sector);
+        if(r==0){//if so, no i++
+            blist=divisors;//why not use erase?
+            /*//TRACKERS  
+            if(settings.tracking){
+                transformation.erase(transformation.begin()+i);
+            } */
+            n=0;
+            cout<<"0"<<endl;
+        }
+        else{
+            //cout<<"f21,i="<<i<<endl;
+            
+            if(r==blist[i]){
+                cout<<"="<<endl;
+                n++;//nothing changes,n+=1
+            }
+            else{
+                cout<<"M"<<endl;
+                blist[i]=r;
+                /*//TRACKERS  
+                if(settings.tracking){
+                    quotientsTmp=divisionResult.quotients;
+                    for(j=0;j<blist.size();j++){
+                        for(k=0;k<polList.size();k++){
+                            if(j!=i){
+                                if(j<i){
+                                    transformation[i][k]=
+                                        transformation[i][k]-
+                                        quotientsTmp[j]*transformation[j][k];
+                                }
+                                else{
+                                    transformation[i][k]=
+                                        transformation[i][k]-
+                                        quotientsTmp[j-1]*transformation[j][k];
+                                }
+                            }//else do nothing
+                        }
+                    }
+                }*/
+                n=0;
+            }
+            i++;
+        }
+        if(n>=blist.size())break;
+        if(settings.progress_indicator)cout<<"ind_pol_set_self_reduction: blist size = "<<blist.size()<<""<<endl;
+        displayer.gens=blist;//debug
+        displayer.display();
+        //ind_pol_set_display(blist,"blist:");
+    }
+    //if(GB_PROGRESS_INDICATOR)cout<<endl;
+    /*
+    //no need to make c(LT)=1 here, it is from the old function ind_pol_GB
+    ex c;
+    IndMon lt;
+    for(i=0;i<blist.size();i++){
+        lt=leading_term(blist[i],sector,orderingString);
+        c=lt.coeff;
+        blist[i]=blist[i]/c;
+        
+        if(settings.tracking){
+            for(j=0;j<polList.size();j++){
+                transformation[i][j]=transformation[i][j]/c;
+            }
+        }//TRACKERS
+    }*/
+    result.basis=blist;
+    result.transformationMatrix={};
+    //if(settings.tracking)result.transformationMatrix=transformation;//TRACKERS
+    return result;
+}
+
+
 int main()
 {   
     GB_DEFAULT_SETTINGS.progress_indicator=true;
@@ -1447,41 +1567,52 @@ int main()
     IndMon m1,m2,m3;
     
     IndPol pol;
-    vector<int> sector={1,1,1,1,1,1,1,1,1};
+    vector<int> sector={1,1,1,1,1};
     pol=w3*(w1+w2);
     pol.display("pol=");
     (pol.cornerize(sector)).display("ctrack=");
     pol.display("pol=");
     vector<ex> ibpVectors;
-    ibpVectors={
+    /*ibpVectors={
         2*(-1 + n2)*(4*mm - s)*s - 2*(-1 + n2)*(mm - s)*w1 + (2*mm - 2*mm*n1 - 5*s - 2*d*s + 3*n1*s + 4*n2*s)*w2 + (1 - d + n1)*w1*w2 + (3 + 2*d - 3*n1 - 2*n2)*pow(w2,2),
          (-1 + n2)*(4*mm - s)*s + (-1 + n2)*s*w1 - (2 + d - n1 - 2*n2)*s*w2 + (-1 - d + n1 + n2)*w1*w2 + (1 + d - n1 - n2)*pow(w2,2),
         -((-1 + n1)*(4*mm - s)*s) + (2*mm - 2*mm*n2 + s + d*s - 2*n1*s)*w1 + (-d + n1)*pow(w1,2) - (-1 + n1)*(2*mm + s)*w2 + (4 + 2*d - 3*n1 - 2*n2)*w1*w2,
         -((-1 + n1)*(4*mm - s)*s) + (2 + d - 2*n1 - n2)*s*w1 + (-1 - d + n1 + n2)*pow(w1,2) - (-1 + n1)*s*w2 + (1 + d - n1 - n2)*w1*w2
-    };
-    ibpVectors={-1 - z1 + z4, -1 - z2 + z5, -1 - z2 - z1*z2 + z6, -1 - z3 + z7, -1 - z3 - z2*z3 + z8, -1 - z3 - z2*z3 - z1*z2*z3 + z9, n1*w1 + n4*w4 + n6*w6*z2 + n9*w9*z2*z3, n2*w2 + n5*w5 + n6*w6*(1 + z1) + n8*w8*z3 + n9*w9*(z3 + z1*z3), n3*w3 + n7*w7 + n8*w8*(1 + z2) + n9*w9*(1 + z2 + z1*z2)};
+    };*/
+    ///ibpVectors={-1 - z1 + z4, -1 - z2 + z5, -1 - z2 - z1*z2 + z6, -1 - z3 + z7, -1 - z3 - z2*z3 + z8, -1 - z3 - z2*z3 - z1*z2*z3 + z9, n1*w1 + n4*w4 + n6*w6*z2 + n9*w9*z2*z3, n2*w2 + n5*w5 + n6*w6*(1 + z1) + n8*w8*z3 + n9*w9*(z3 + z1*z3), n3*w3 + n7*w7 + n8*w8*(1 + z2) + n9*w9*(1 + z2 + z1*z2)};
+    ibpVectors={5 + m10 + m12 + m13 + m14 + m16 + m17 + m19 + m7 + m8 + m9 + n1 + n2 + n3 + n4 + n5 + (2 + m12 + m16 + m19 + m20 + m7 + n1)*z1 + (4 + m12 + m13 + m16 + m17 + m18 + m19 + m20 + m7 + m8 + 2*n1 + n2)*z2 + (6 + m12 + m13 + m14 + m15 + m16 + m17 + m18 + m19 + m20 + 2*m7 + m8 + m9 + 2*n1 + 2*n2 + n3)*z3 + (8 + m10 + m11 + 2*m12 + m13 + m14 + m15 + m16 + m17 + m18 + m19 + m20 + 2*m7 + 2*m8 + m9 + 2*n1 + 2*n2 + 2*n3 + n4)*z4 + (10 + m10 + m11 + 2*m12 + 2*m13 + m14 + m15 + 2*m16 + m17 + m18 + m19 + m20 + m6 + 2*m7 + 2*m8 + 2*m9 + 2*n1 + 2*n2 + 2*n3 + 2*n4 + n5)*z5, (4 + m10 + m13 + m14 + m17 + m8 + m9 + n2 + n3 + n4 + n5)*z1 + (2 + m10 + m14 + m9 - n1 + n3 + n4 + n5)*z2 + (2 + m13 + m17 + m18 + m8 + n2)*z1*z2 + (m10 - m7 - n1 - n2 + n4 + n5)*z3 + (4 + m13 + m14 + m15 + m17 + m18 + m8 + m9 + 2*n2 + n3)*z1*z3 + (m14 + m15 + m9 - 2*n1 + n3)*z2*z3 + (-2 - m12 - m7 - m8 - n1 - n2 - n3 + n5)*z4 + (6 + m10 + m11 + m13 + m14 + m15 + m17 + m18 + 2*m8 + m9 + 2*n2 + 2*n3 + n4)*z1*z4 + (2 + m10 + m11 + m14 + m15 + m9 - 2*n1 + 2*n3 + n4)*z2*z4 + (-2 + m10 + m11 - 2*m7 - 2*n1 - 2*n2 + n4)*z3*z4 + (-4 - m12 - m13 - m16 - m7 - m8 - m9 - n1 - n2 - n3 - n4)*z5 + (8 + m10 + m11 + 2*m13 + m14 + m15 + m17 + m18 + m6 + 2*m8 + 2*m9 + 2*n2 + 2*n3 + 2*n4 + n5)*z1*z5 + (4 + m10 + m11 + m14 + m15 + m6 + 2*m9 - 2*n1 + 2*n3 + 2*n4 + n5)*z2*z5 + (m10 + m11 + m6 - 2*m7 - 2*n1 - 2*n2 + 2*n4 + n5)*z3*z5 + (-4 - 2*m12 + m6 - 2*m7 - 2*m8 - 2*n1 - 2*n2 - 2*n3 + n5)*z4*z5 + (-1 - n1)*pow(z2, 2) + (-2 - m7 - n1 - n2)*pow(z3, 2) + (-3 - m12 - m7 - m8 - n1 - n2 - n3)*pow(z4, 2) + (-4 - m12 - m13 - m16 - m7 - m8 - m9 - n1 - n2 - n3 - n4)*pow(z5, 2), (3 + m10 + m14 + m9 + n3 + n4 + n5)*z1*z2 + (1 + m10 - n2 + n4 + n5)*z1*z3 + (2 + 2*m10 - m7 - n2 + 2*n4 + 2*n5)*z2*z3 + (2 + m14 + m15 + m9 + n3)*z1*z2*z3 + (-1 - m8 - n2 - n3 + n5)*z1*z4 + (-2 - m12 - m7 - m8 - n2 - 2*n3 + 2*n5)*z2*z4 + (4 + m10 + m11 + m14 + m15 + m9 + 2*n3 + n4)*z1*z2*z4 + (-m12 - m8 - n3 + 2*n5)*z3*z4 + (m10 + m11 - 2*n2 + n4)*z1*z3*z4 + (2*m10 + 2*m11 - 2*m7 - 2*n2 + 2*n4)*z2*z3*z4 + (-3 - m13 - m8 - m9 - n2 - n3 - n4)*z1*z5 + (-6 - m12 - m13 - m16 - m7 - m8 - 2*m9 - n2 - 2*n3 - 2*n4)*z2*z5 + (6 + m10 + m11 + m14 + m15 + m6 + 2*m9 + 2*n3 + 2*n4 + n5)*z1*z2*z5 + (-4 - m12 - m13 - m16 - m8 - m9 - n3 - 2*n4)*z3*z5 + (2 + m10 + m11 + m6 - 2*n2 + 2*n4 + n5)*z1*z3*z5 + (4 + 2*m10 + 2*m11 + 2*m6 - 2*m7 - 2*n2 + 4*n4 + 2*n5)*z2*z3*z5 + (-2 - m13 - m16 - m9 - n4)*z4*z5 + (-2 + m6 - 2*m8 - 2*n2 - 2*n3 + n5)*z1*z4*z5 + (-4 - 2*m12 + 2*m6 - 2*m7 - 2*m8 - 2*n2 - 4*n3 + 2*n5)*z2*z4*z5 + (-2*m12 + 2*m6 - 2*m8 - 2*n3 + 2*n5)*z3*z4*z5 + (3 + m10 + m14 + m9 + n3 + n4 + n5)*pow(z2, 2) + (2 + m14 + m15 + m9 + n3)*z3*pow(z2, 2) + (4 + m10 + m11 + m14 + m15 + m9 + 2*n3 + n4)*z4*pow(z2, 2) + (6 + m10 + m11 + m14 + m15 + m6 + 2*m9 + 2*n3 + 2*n4 + n5)*z5*pow(z2, 2) + (2 + m10 + n4 + n5)*pow(z3, 2) + (-1 - n2)*z1*pow(z3, 2) + (-2 - m7 - n2)*z2*pow(z3, 2) + (2 + m10 + m11 + n4)*z4*pow(z3, 2) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z5*pow(z3, 2) + (1 + n5)*pow(z4, 2) + (-2 - m8 - n2 - n3)*z1*pow(z4, 2) + (-4 - m12 - m7 - m8 - n2 - 2*n3)*z2*pow(z4, 2) + (-2 - m12 - m8 - n3)*z3*pow(z4, 2) + (2 + m6 + n5)*z5*pow(z4, 2) + (-3 - m13 - m8 - m9 - n2 - n3 - n4)*z1*pow(z5, 2) + (-6 - m12 - m13 - m16 - m7 - m8 - 2*m9 - n2 - 2*n3 - 2*n4)*z2*pow(z5, 2) + (-4 - m12 - m13 - m16 - m8 - m9 - n3 - 2*n4)*z3*pow(z5, 2) + (-2 - m13 - m16 - m9 - n4)*z4*pow(z5, 2), (2 + m10 + n4 + n5)*z1*z2*z3 + (-n3 + n5)*z1*z2*z4 + (-m8 - n3 + 2*n5)*z1*z3*z4 + (-m12 - m8 - 2*n3 + 4*n5)*z2*z3*z4 + (2 + m10 + m11 + n4)*z1*z2*z3*z4 + (-2 - m9 - n3 - n4)*z1*z2*z5 + (-4 - m13 - m8 - m9 - n3 - 2*n4)*z1*z3*z5 + (-8 - m12 - m13 - m16 - m8 - 2*m9 - 2*n3 - 4*n4)*z2*z3*z5 + (4 + m10 + m11 + m6 + 2*n4 + n5)*z1*z2*z3*z5 + (-2 - m13 - m9 - n4)*z1*z4*z5 + (-4 - m13 - m16 - 2*m9 - 2*n4)*z2*z4*z5 + (m6 - 2*n3 + n5)*z1*z2*z4*z5 + (-6 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*z4*z5 + (2*m6 - 2*m8 - 2*n3 + 2*n5)*z1*z3*z4*z5 + (-2*m12 + 4*m6 - 2*m8 - 4*n3 + 4*n5)*z2*z3*z4*z5 + (2 + m10 + n4 + n5)*z3*pow(z2, 2) + (-n3 + n5)*z4*pow(z2, 2) + (2 + m10 + m11 + n4)*z3*z4*pow(z2, 2) + (-2 - m9 - n3 - n4)*z5*pow(z2, 2) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z3*z5*pow(z2, 2) + (m6 - 2*n3 + n5)*z4*z5*pow(z2, 2) + (2 + m10 + n4 + n5)*z1*pow(z3, 2) + (4 + 2*m10 + 2*n4 + 2*n5)*z2*pow(z3, 2) + (-m12 - m8 - n3 + 3*n5)*z4*pow(z3, 2) + (2 + m10 + m11 + n4)*z1*z4*pow(z3, 2) + (4 + 2*m10 + 2*m11 + 2*n4)*z2*z4*pow(z3, 2) + (-6 - m12 - m13 - m16 - m8 - m9 - n3 - 3*n4)*z5*pow(z3, 2) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z1*z5*pow(z3, 2) + (8 + 2*m10 + 2*m11 + 2*m6 + 4*n4 + 2*n5)*z2*z5*pow(z3, 2) + (-2*m12 + 3*m6 - 2*m8 - 2*n3 + 3*n5)*z4*z5*pow(z3, 2) + (2 + m10 + n4 + n5)*pow(z3, 3) + (2 + m10 + m11 + n4)*z4*pow(z3, 3) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z5*pow(z3, 3) + (1 + n5)*z1*pow(z4, 2) + (2 + 2*n5)*z2*pow(z4, 2) + (-1 - n3)*z1*z2*pow(z4, 2) + (3 + 3*n5)*z3*pow(z4, 2) + (-2 - m8 - n3)*z1*z3*pow(z4, 2) + (-4 - m12 - m8 - 2*n3)*z2*z3*pow(z4, 2) + (-3 - m13 - m16 - m9 - n4)*z5*pow(z4, 2) + (2 + m6 + n5)*z1*z5*pow(z4, 2) + (4 + 2*m6 + 2*n5)*z2*z5*pow(z4, 2) + (6 + 3*m6 + 3*n5)*z3*z5*pow(z4, 2) + (-1 - n3)*pow(z2, 2)*pow(z4, 2) + (-3 - m12 - m8 - n3)*pow(z3, 2)*pow(z4, 2) + (1 + n5)*pow(z4, 3) + (2 + m6 + n5)*z5*pow(z4, 3) + (-2 - m9 - n3 - n4)*z1*z2*pow(z5, 2) + (-4 - m13 - m8 - m9 - n3 - 2*n4)*z1*z3*pow(z5, 2) + (-8 - m12 - m13 - m16 - m8 - 2*m9 - 2*n3 - 4*n4)*z2*z3*pow(z5, 2) + (-2 - m13 - m9 - n4)*z1*z4*pow(z5, 2) + (-4 - m13 - m16 - 2*m9 - 2*n4)*z2*z4*pow(z5, 2) + (-6 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*z4*pow(z5, 2) + (-2 - m9 - n3 - n4)*pow(z2, 2)*pow(z5, 2) + (-6 - m12 - m13 - m16 - m8 - m9 - n3 - 3*n4)*pow(z3, 2)*pow(z5, 2) + (-3 - m13 - m16 - m9 - n4)*pow(z4, 2)*pow(z5, 2), (1 + n5)*z1*z2*z3*z4 + (-1 - n4)*z1*z2*z3*z5 + (-2 - m9 - n4)*z1*z2*z4*z5 + (-4 - m13 - m9 - 2*n4)*z1*z3*z4*z5 + (-8 - m13 - m16 - 2*m9 - 4*n4)*z2*z3*z4*z5 + (2 + m6 + n5)*z1*z2*z3*z4*z5 + (1 + n5)*z3*z4*pow(z2, 2) + (-1 - n4)*z3*z5*pow(z2, 2) + (-2 - m9 - n4)*z4*z5*pow(z2, 2) + (2 + m6 + n5)*z3*z4*z5*pow(z2, 2) + (1 + n5)*z1*z4*pow(z3, 2) + (2 + 2*n5)*z2*z4*pow(z3, 2) + (-1 - n4)*z1*z5*pow(z3, 2) + (-2 - 2*n4)*z2*z5*pow(z3, 2) + (-6 - m13 - m16 - m9 - 3*n4)*z4*z5*pow(z3, 2) + (2 + m6 + n5)*z1*z4*z5*pow(z3, 2) + (4 + 2*m6 + 2*n5)*z2*z4*z5*pow(z3, 2) + (1 + n5)*z4*pow(z3, 3) + (-1 - n4)*z5*pow(z3, 3) + (2 + m6 + n5)*z4*z5*pow(z3, 3) + (1 + n5)*z1*z2*pow(z4, 2) + (2 + 2*n5)*z1*z3*pow(z4, 2) + (4 + 4*n5)*z2*z3*pow(z4, 2) + (-3 - m13 - m9 - n4)*z1*z5*pow(z4, 2) + (-6 - m13 - m16 - 2*m9 - 2*n4)*z2*z5*pow(z4, 2) + (2 + m6 + n5)*z1*z2*z5*pow(z4, 2) + (-9 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*z5*pow(z4, 2) + (4 + 2*m6 + 2*n5)*z1*z3*z5*pow(z4, 2) + (8 + 4*m6 + 4*n5)*z2*z3*z5*pow(z4, 2) + (1 + n5)*pow(z2, 2)*pow(z4, 2) + (2 + m6 + n5)*z5*pow(z2, 2)*pow(z4, 2) + (3 + 3*n5)*pow(z3, 2)*pow(z4, 2) + (6 + 3*m6 + 3*n5)*z5*pow(z3, 2)*pow(z4, 2) + (1 + n5)*z1*pow(z4, 3) + (2 + 2*n5)*z2*pow(z4, 3) + (3 + 3*n5)*z3*pow(z4, 3) + (-4 - m13 - m16 - m9 - n4)*z5*pow(z4, 3) + (2 + m6 + n5)*z1*z5*pow(z4, 3) + (4 + 2*m6 + 2*n5)*z2*z5*pow(z4, 3) + (6 + 3*m6 + 3*n5)*z3*z5*pow(z4, 3) + (1 + n5)*pow(z4, 4) + (2 + m6 + n5)*z5*pow(z4, 4) + (-1 - n4)*z1*z2*z3*pow(z5, 2) + (-2 - m9 - n4)*z1*z2*z4*pow(z5, 2) + (-4 - m13 - m9 - 2*n4)*z1*z3*z4*pow(z5, 2) + (-8 - m13 - m16 - 2*m9 - 4*n4)*z2*z3*z4*pow(z5, 2) + (-1 - n4)*z3*pow(z2, 2)*pow(z5, 2) + (-2 - m9 - n4)*z4*pow(z2, 2)*pow(z5, 2) + (-1 - n4)*z1*pow(z3, 2)*pow(z5, 2) + (-2 - 2*n4)*z2*pow(z3, 2)*pow(z5, 2) + (-6 - m13 - m16 - m9 - 3*n4)*z4*pow(z3, 2)*pow(z5, 2) + (-1 - n4)*pow(z3, 3)*pow(z5, 2) + (-3 - m13 - m9 - n4)*z1*pow(z4, 2)*pow(z5, 2) + (-6 - m13 - m16 - 2*m9 - 2*n4)*z2*pow(z4, 2)*pow(z5, 2) + (-9 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*pow(z4, 2)*pow(z5, 2) + (-4 - m13 - m16 - m9 - n4)*pow(z4, 3)*pow(z5, 2)};
+    reverse(ibpVectors.begin(),ibpVectors.end());
     IndPolIdeal ibps,gb;
     ibps=ibpVectors;
     ibps.display("ibps=");
     GBResult gbResult;
     int i;
-    //gb.gens={};
+    gb.gens={};
     for(i=0;i<ibps.gens.size();i++){
         break;
         cout<<"=====<"<<i<<">====="<<endl;
-        gb.gens.push_back(ibps.gens[i]);
+        gb.gens.insert(gb.gens.begin(),ibps.gens[ibps.gens.size()-1-i]);
         if(i==0)continue;
-        gbResult=ind_pol_GB(gb,sector,"degree_reverse_lexicographic");
+        //gbResult=ind_pol_GB(gb,sector,"degree_reverse_lexicographic");
+        gbResult=ind_pol_set_self_reduction(gb.gens,sector,"degree_reverse_lexicographic",GB_DEFAULT_SETTINGS);
         gb=gbResult;
+        //gb.display("GB:"); 
+        if(i==1)break;
     }
+    IndPolSetDivisionResult ipsdr;
+    IndPolIdeal idealtmp;
+    idealtmp={ibps.gens[4]};
+    ipsdr=ind_pol_set_division(ibps.gens[3],idealtmp,sector,"degree_reverse_lexicographic");
+    ipsdr.display();
+    return 0;
     timer1=0,timer2=0,counter=0;
     
     clock_t start=clock();
-    gbResult=ind_pol_GB(ibps,sector,"degree_reverse_lexicographic");
+    gbResult=ind_pol_set_self_reduction(ibps.gens,sector,"degree_reverse_lexicographic",GB_DEFAULT_SETTINGS);
     clock_t end=clock();
     double duration = static_cast<double>(end - start) / CLOCKS_PER_SEC;
     timer2+=duration;
-    gb=gbResult;
+    //gb=gbResult;
     gb.display("GB:"); 
     
     cout<<"counter="<<counter<<endl;
