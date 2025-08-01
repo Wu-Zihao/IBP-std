@@ -1,26 +1,80 @@
 (* ::Package:: *)
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Global Variables*)
 
 
-SDim=9
-ns=Table[ToExpression["n"<>ToString[i]],{i,SDim}]
-zs=Table[ToExpression["z"<>ToString[i]],{i,SDim}]
-ws=Table[ToExpression["w"<>ToString[i]],{i,SDim}]
-vars={d,s,t}
+SDim=5
+ns=Table[ToExpression["n"<>ToString[i]],{i,SDim}]//Reverse
+zs=Table[ToExpression["z"<>ToString[i]],{i,SDim}]//Reverse
+ws=Table[ToExpression["w"<>ToString[i]],{i,SDim}]//Reverse
+vars=Table[ToExpression["m"<>ToString[i]],{i,SDim+1,20}]
+numerics=(#->1/RandomPrime[1872791])&/@vars
+
+
+(* ::Input:: *)
+(**)
+
+
+"ibpVectors={5 + m10 + m12 + m13 + m14 + m16 + m17 + m19 + m7 + m8 + m9 + n1 + n2 + n3 + n4 + n5 + (2 + m12 + m16 + m19 + m20 + m7 + n1)*z1 + (4 + m12 + m13 + m16 + m17 + m18 + m19 + m20 + m7 + m8 + 2*n1 + n2)*z2 + (6 + m12 + m13 + m14 + m15 + m16 + m17 + m18 + m19 + m20 + 2*m7 + m8 + m9 + 2*n1 + 2*n2 + n3)*z3 + (8 + m10 + m11 + 2*m12 + m13 + m14 + m15 + m16 + m17 + m18 + m19 + m20 + 2*m7 + 2*m8 + m9 + 2*n1 + 2*n2 + 2*n3 + n4)*z4 + (10 + m10 + m11 + 2*m12 + 2*m13 + m14 + m15 + 2*m16 + m17 + m18 + m19 + m20 + m6 + 2*m7 + 2*m8 + 2*m9 + 2*n1 + 2*n2 + 2*n3 + 2*n4 + n5)*z5, (4 + m10 + m13 + m14 + m17 + m8 + m9 + n2 + n3 + n4 + n5)*z1 + (2 + m10 + m14 + m9 - n1 + n3 + n4 + n5)*z2 + (2 + m13 + m17 + m18 + m8 + n2)*z1*z2 + (m10 - m7 - n1 - n2 + n4 + n5)*z3 + (4 + m13 + m14 + m15 + m17 + m18 + m8 + m9 + 2*n2 + n3)*z1*z3 + (m14 + m15 + m9 - 2*n1 + n3)*z2*z3 + (-2 - m12 - m7 - m8 - n1 - n2 - n3 + n5)*z4 + (6 + m10 + m11 + m13 + m14 + m15 + m17 + m18 + 2*m8 + m9 + 2*n2 + 2*n3 + n4)*z1*z4 + (2 + m10 + m11 + m14 + m15 + m9 - 2*n1 + 2*n3 + n4)*z2*z4 + (-2 + m10 + m11 - 2*m7 - 2*n1 - 2*n2 + n4)*z3*z4 + (-4 - m12 - m13 - m16 - m7 - m8 - m9 - n1 - n2 - n3 - n4)*z5 + (8 + m10 + m11 + 2*m13 + m14 + m15 + m17 + m18 + m6 + 2*m8 + 2*m9 + 2*n2 + 2*n3 + 2*n4 + n5)*z1*z5 + (4 + m10 + m11 + m14 + m15 + m6 + 2*m9 - 2*n1 + 2*n3 + 2*n4 + n5)*z2*z5 + (m10 + m11 + m6 - 2*m7 - 2*n1 - 2*n2 + 2*n4 + n5)*z3*z5 + (-4 - 2*m12 + m6 - 2*m7 - 2*m8 - 2*n1 - 2*n2 - 2*n3 + n5)*z4*z5 + (-1 - n1)*pow(z2, 2) + (-2 - m7 - n1 - n2)*pow(z3, 2) + (-3 - m12 - m7 - m8 - n1 - n2 - n3)*pow(z4, 2) + (-4 - m12 - m13 - m16 - m7 - m8 - m9 - n1 - n2 - n3 - n4)*pow(z5, 2), (3 + m10 + m14 + m9 + n3 + n4 + n5)*z1*z2 + (1 + m10 - n2 + n4 + n5)*z1*z3 + (2 + 2*m10 - m7 - n2 + 2*n4 + 2*n5)*z2*z3 + (2 + m14 + m15 + m9 + n3)*z1*z2*z3 + (-1 - m8 - n2 - n3 + n5)*z1*z4 + (-2 - m12 - m7 - m8 - n2 - 2*n3 + 2*n5)*z2*z4 + (4 + m10 + m11 + m14 + m15 + m9 + 2*n3 + n4)*z1*z2*z4 + (-m12 - m8 - n3 + 2*n5)*z3*z4 + (m10 + m11 - 2*n2 + n4)*z1*z3*z4 + (2*m10 + 2*m11 - 2*m7 - 2*n2 + 2*n4)*z2*z3*z4 + (-3 - m13 - m8 - m9 - n2 - n3 - n4)*z1*z5 + (-6 - m12 - m13 - m16 - m7 - m8 - 2*m9 - n2 - 2*n3 - 2*n4)*z2*z5 + (6 + m10 + m11 + m14 + m15 + m6 + 2*m9 + 2*n3 + 2*n4 + n5)*z1*z2*z5 + (-4 - m12 - m13 - m16 - m8 - m9 - n3 - 2*n4)*z3*z5 + (2 + m10 + m11 + m6 - 2*n2 + 2*n4 + n5)*z1*z3*z5 + (4 + 2*m10 + 2*m11 + 2*m6 - 2*m7 - 2*n2 + 4*n4 + 2*n5)*z2*z3*z5 + (-2 - m13 - m16 - m9 - n4)*z4*z5 + (-2 + m6 - 2*m8 - 2*n2 - 2*n3 + n5)*z1*z4*z5 + (-4 - 2*m12 + 2*m6 - 2*m7 - 2*m8 - 2*n2 - 4*n3 + 2*n5)*z2*z4*z5 + (-2*m12 + 2*m6 - 2*m8 - 2*n3 + 2*n5)*z3*z4*z5 + (3 + m10 + m14 + m9 + n3 + n4 + n5)*pow(z2, 2) + (2 + m14 + m15 + m9 + n3)*z3*pow(z2, 2) + (4 + m10 + m11 + m14 + m15 + m9 + 2*n3 + n4)*z4*pow(z2, 2) + (6 + m10 + m11 + m14 + m15 + m6 + 2*m9 + 2*n3 + 2*n4 + n5)*z5*pow(z2, 2) + (2 + m10 + n4 + n5)*pow(z3, 2) + (-1 - n2)*z1*pow(z3, 2) + (-2 - m7 - n2)*z2*pow(z3, 2) + (2 + m10 + m11 + n4)*z4*pow(z3, 2) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z5*pow(z3, 2) + (1 + n5)*pow(z4, 2) + (-2 - m8 - n2 - n3)*z1*pow(z4, 2) + (-4 - m12 - m7 - m8 - n2 - 2*n3)*z2*pow(z4, 2) + (-2 - m12 - m8 - n3)*z3*pow(z4, 2) + (2 + m6 + n5)*z5*pow(z4, 2) + (-3 - m13 - m8 - m9 - n2 - n3 - n4)*z1*pow(z5, 2) + (-6 - m12 - m13 - m16 - m7 - m8 - 2*m9 - n2 - 2*n3 - 2*n4)*z2*pow(z5, 2) + (-4 - m12 - m13 - m16 - m8 - m9 - n3 - 2*n4)*z3*pow(z5, 2) + (-2 - m13 - m16 - m9 - n4)*z4*pow(z5, 2), (2 + m10 + n4 + n5)*z1*z2*z3 + (-n3 + n5)*z1*z2*z4 + (-m8 - n3 + 2*n5)*z1*z3*z4 + (-m12 - m8 - 2*n3 + 4*n5)*z2*z3*z4 + (2 + m10 + m11 + n4)*z1*z2*z3*z4 + (-2 - m9 - n3 - n4)*z1*z2*z5 + (-4 - m13 - m8 - m9 - n3 - 2*n4)*z1*z3*z5 + (-8 - m12 - m13 - m16 - m8 - 2*m9 - 2*n3 - 4*n4)*z2*z3*z5 + (4 + m10 + m11 + m6 + 2*n4 + n5)*z1*z2*z3*z5 + (-2 - m13 - m9 - n4)*z1*z4*z5 + (-4 - m13 - m16 - 2*m9 - 2*n4)*z2*z4*z5 + (m6 - 2*n3 + n5)*z1*z2*z4*z5 + (-6 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*z4*z5 + (2*m6 - 2*m8 - 2*n3 + 2*n5)*z1*z3*z4*z5 + (-2*m12 + 4*m6 - 2*m8 - 4*n3 + 4*n5)*z2*z3*z4*z5 + (2 + m10 + n4 + n5)*z3*pow(z2, 2) + (-n3 + n5)*z4*pow(z2, 2) + (2 + m10 + m11 + n4)*z3*z4*pow(z2, 2) + (-2 - m9 - n3 - n4)*z5*pow(z2, 2) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z3*z5*pow(z2, 2) + (m6 - 2*n3 + n5)*z4*z5*pow(z2, 2) + (2 + m10 + n4 + n5)*z1*pow(z3, 2) + (4 + 2*m10 + 2*n4 + 2*n5)*z2*pow(z3, 2) + (-m12 - m8 - n3 + 3*n5)*z4*pow(z3, 2) + (2 + m10 + m11 + n4)*z1*z4*pow(z3, 2) + (4 + 2*m10 + 2*m11 + 2*n4)*z2*z4*pow(z3, 2) + (-6 - m12 - m13 - m16 - m8 - m9 - n3 - 3*n4)*z5*pow(z3, 2) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z1*z5*pow(z3, 2) + (8 + 2*m10 + 2*m11 + 2*m6 + 4*n4 + 2*n5)*z2*z5*pow(z3, 2) + (-2*m12 + 3*m6 - 2*m8 - 2*n3 + 3*n5)*z4*z5*pow(z3, 2) + (2 + m10 + n4 + n5)*pow(z3, 3) + (2 + m10 + m11 + n4)*z4*pow(z3, 3) + (4 + m10 + m11 + m6 + 2*n4 + n5)*z5*pow(z3, 3) + (1 + n5)*z1*pow(z4, 2) + (2 + 2*n5)*z2*pow(z4, 2) + (-1 - n3)*z1*z2*pow(z4, 2) + (3 + 3*n5)*z3*pow(z4, 2) + (-2 - m8 - n3)*z1*z3*pow(z4, 2) + (-4 - m12 - m8 - 2*n3)*z2*z3*pow(z4, 2) + (-3 - m13 - m16 - m9 - n4)*z5*pow(z4, 2) + (2 + m6 + n5)*z1*z5*pow(z4, 2) + (4 + 2*m6 + 2*n5)*z2*z5*pow(z4, 2) + (6 + 3*m6 + 3*n5)*z3*z5*pow(z4, 2) + (-1 - n3)*pow(z2, 2)*pow(z4, 2) + (-3 - m12 - m8 - n3)*pow(z3, 2)*pow(z4, 2) + (1 + n5)*pow(z4, 3) + (2 + m6 + n5)*z5*pow(z4, 3) + (-2 - m9 - n3 - n4)*z1*z2*pow(z5, 2) + (-4 - m13 - m8 - m9 - n3 - 2*n4)*z1*z3*pow(z5, 2) + (-8 - m12 - m13 - m16 - m8 - 2*m9 - 2*n3 - 4*n4)*z2*z3*pow(z5, 2) + (-2 - m13 - m9 - n4)*z1*z4*pow(z5, 2) + (-4 - m13 - m16 - 2*m9 - 2*n4)*z2*z4*pow(z5, 2) + (-6 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*z4*pow(z5, 2) + (-2 - m9 - n3 - n4)*pow(z2, 2)*pow(z5, 2) + (-6 - m12 - m13 - m16 - m8 - m9 - n3 - 3*n4)*pow(z3, 2)*pow(z5, 2) + (-3 - m13 - m16 - m9 - n4)*pow(z4, 2)*pow(z5, 2), (1 + n5)*z1*z2*z3*z4 + (-1 - n4)*z1*z2*z3*z5 + (-2 - m9 - n4)*z1*z2*z4*z5 + (-4 - m13 - m9 - 2*n4)*z1*z3*z4*z5 + (-8 - m13 - m16 - 2*m9 - 4*n4)*z2*z3*z4*z5 + (2 + m6 + n5)*z1*z2*z3*z4*z5 + (1 + n5)*z3*z4*pow(z2, 2) + (-1 - n4)*z3*z5*pow(z2, 2) + (-2 - m9 - n4)*z4*z5*pow(z2, 2) + (2 + m6 + n5)*z3*z4*z5*pow(z2, 2) + (1 + n5)*z1*z4*pow(z3, 2) + (2 + 2*n5)*z2*z4*pow(z3, 2) + (-1 - n4)*z1*z5*pow(z3, 2) + (-2 - 2*n4)*z2*z5*pow(z3, 2) + (-6 - m13 - m16 - m9 - 3*n4)*z4*z5*pow(z3, 2) + (2 + m6 + n5)*z1*z4*z5*pow(z3, 2) + (4 + 2*m6 + 2*n5)*z2*z4*z5*pow(z3, 2) + (1 + n5)*z4*pow(z3, 3) + (-1 - n4)*z5*pow(z3, 3) + (2 + m6 + n5)*z4*z5*pow(z3, 3) + (1 + n5)*z1*z2*pow(z4, 2) + (2 + 2*n5)*z1*z3*pow(z4, 2) + (4 + 4*n5)*z2*z3*pow(z4, 2) + (-3 - m13 - m9 - n4)*z1*z5*pow(z4, 2) + (-6 - m13 - m16 - 2*m9 - 2*n4)*z2*z5*pow(z4, 2) + (2 + m6 + n5)*z1*z2*z5*pow(z4, 2) + (-9 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*z5*pow(z4, 2) + (4 + 2*m6 + 2*n5)*z1*z3*z5*pow(z4, 2) + (8 + 4*m6 + 4*n5)*z2*z3*z5*pow(z4, 2) + (1 + n5)*pow(z2, 2)*pow(z4, 2) + (2 + m6 + n5)*z5*pow(z2, 2)*pow(z4, 2) + (3 + 3*n5)*pow(z3, 2)*pow(z4, 2) + (6 + 3*m6 + 3*n5)*z5*pow(z3, 2)*pow(z4, 2) + (1 + n5)*z1*pow(z4, 3) + (2 + 2*n5)*z2*pow(z4, 3) + (3 + 3*n5)*z3*pow(z4, 3) + (-4 - m13 - m16 - m9 - n4)*z5*pow(z4, 3) + (2 + m6 + n5)*z1*z5*pow(z4, 3) + (4 + 2*m6 + 2*n5)*z2*z5*pow(z4, 3) + (6 + 3*m6 + 3*n5)*z3*z5*pow(z4, 3) + (1 + n5)*pow(z4, 4) + (2 + m6 + n5)*z5*pow(z4, 4) + (-1 - n4)*z1*z2*z3*pow(z5, 2) + (-2 - m9 - n4)*z1*z2*z4*pow(z5, 2) + (-4 - m13 - m9 - 2*n4)*z1*z3*z4*pow(z5, 2) + (-8 - m13 - m16 - 2*m9 - 4*n4)*z2*z3*z4*pow(z5, 2) + (-1 - n4)*z3*pow(z2, 2)*pow(z5, 2) + (-2 - m9 - n4)*z4*pow(z2, 2)*pow(z5, 2) + (-1 - n4)*z1*pow(z3, 2)*pow(z5, 2) + (-2 - 2*n4)*z2*pow(z3, 2)*pow(z5, 2) + (-6 - m13 - m16 - m9 - 3*n4)*z4*pow(z3, 2)*pow(z5, 2) + (-1 - n4)*pow(z3, 3)*pow(z5, 2) + (-3 - m13 - m9 - n4)*z1*pow(z4, 2)*pow(z5, 2) + (-6 - m13 - m16 - 2*m9 - 2*n4)*z2*pow(z4, 2)*pow(z5, 2) + (-9 - 2*m13 - 2*m16 - 2*m9 - 3*n4)*z3*pow(z4, 2)*pow(z5, 2) + (-4 - m13 - m16 - m9 - n4)*pow(z4, 3)*pow(z5, 2)};";
+StringReplace[%,"pow("~~Shortest[x__]~~")":>"Power["<>x<>"]"]//ToExpression;
+
+
+
+(* ::Section:: *)
+(*LatticeRational*)
+
+
+(* ::Subsection:: *)
+(*LatPol*)
+
+
+LatShifts[x_LatPol]:=x[[1]]
+ValueArray[x_LatPol]:=x[[2]]
+
+
+ToLatPol[expr_,latShifts_]:=LatPol[latShifts,
+Table[expr/.n->i+LATSHIFT,{i,1,10}]]
+
+
+FromLatPol[x_LatPol,n_]:=Sum[
+	x[[1,k]]*Product[
+		(n-i-LATSHIFT)/(k-i),
+		{i,DeleteCases[Range[Length[x[[1]]]],k]}
+	],
+	{k,Range[Length[x[[1]]]]}
+]
+
+
+FromLatPol[n//ToLatPol,11+LATSHIFT]
+
+
+MoveLeft[x_LatPol,distance_]:=Module[{},
+	Switch[Sign[distance],
+	0,
+		Return[x]
+	,
+	1,
+		
+
+
+]
+(*what if n is very large?*)
+(*n\[Rule]n+1*)
+
+
 
 
 (* ::Section:: *)
 (*Data Structures*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Simplifier*)
 
 
 RandomNumericCheck[expr_]:=Module[
-{vars=Variables[expr],table},
+{vars=Variables[expr],table,t},
 	
 	table=Quiet[Table[
 		Factor[expr/.(#->RandomPrime[Length[vars]*5000]/RandomPrime[Length[vars]^2*10000]&/@vars)],
@@ -30,16 +84,22 @@ RandomNumericCheck[expr_]:=Module[
 	table=DeleteCases[table,Indeterminate];
 	table=DeleteCases[table,0];
 		
-
+	
 	If[table==={},
 		Return[0]
 	,
-		Return[table[[1]]]
+		Return[expr]
 	]
 ]
 
 
-SmartCheck[expr_]:=TimeConstrained[expr//Together,1,expr//RandomNumericCheck]
+SmartCheck[expr_]:=Module[{r,t},
+	t=AbsoluteTime[];
+	r=TimeConstrained[expr//Together,0.00001,expr//RandomNumericCheck];
+	TIMER+=(AbsoluteTime[]-t);
+
+	r
+]
 
 
 (* ::Subsection:: *)
@@ -72,7 +132,7 @@ Division[x_IndMon,y_IndMon]:=Act[x,y//Inv]
 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*IndPol*)
 
 
@@ -102,10 +162,10 @@ Add[x_IndMon,y_IndPol]:=IndPol[Append[y//TermList,x]]//Collected
 Add[x_IndPol,y_IndMon]:=Add[y,x]//Collected
 Add[x_IndPol,y_IndPol]:=IndPol[Join[x//TermList,y//TermList]]//Collected
 
-Substract[x_IndMon,y_IndMon]:=Add[x,y//Mns]
-Substract[x_IndMon,y_IndPol]:=Add[x,y//Mns]
-Substract[x_IndPol,y_IndMon]:=Add[x,y//Mns]
-Substract[x_IndPol,y_IndPol]:=Add[x,y//Mns]
+Subtraction[x_IndMon,y_IndMon]:=Add[x,y//Mns]
+Subtraction[x_IndMon,y_IndPol]:=Add[x,y//Mns]
+Subtraction[x_IndPol,y_IndMon]:=Add[x,y//Mns]
+Subtraction[x_IndPol,y_IndPol]:=Add[x,y//Mns]
 
 
 Simplifier=SmartCheck;
@@ -113,7 +173,7 @@ Collected[x_IndPol]:=Module[
 {terms=x//TermList,termsGrouped},
 	termsGrouped=GatherBy[terms,Indices];
 	IndPol[
-		(IndMon[Total[Coeff/@#],Indices[#[[1]]]]&/@termsGrouped)/.IndMon[0,_]->Nothing
+		(IndMon[Total[Coeff/@#]//Simplifier,Indices[#[[1]]]]&/@termsGrouped)/.IndMon[0,_]->Nothing
 	]
 ]
 Act[x_IndPol,y_IndMon]:=IndPol[Act[#,y]&/@TermList[x]]//Collected
@@ -161,7 +221,9 @@ LT[x_IndPol,directions_,ordering_]:=SortBy[
 (*Cornerized*)
 
 
-Cornerized[directions_][x_IndPol]:=Module[{refMon,indices,refInd},
+Cornerized//ClearAll
+Cornerized[x_IndPol,directions_]:=Module[{refMon,indices,refInd},
+	If[x===ZERO,Return[ZERO]];
 	indices=Indices/@(x//TermList);
 	indices=DiagonalMatrix[directions].#&/@indices;
 	refInd=Min/@Transpose[indices];
@@ -176,7 +238,7 @@ Cornerized[directions_][x_IndPol]:=Module[{refMon,indices,refInd},
 (*Polynomial Division with remainder*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Divisible Q*)
 
 
@@ -191,7 +253,7 @@ IndMonDivisibleQ[x_IndMon,y_IndMon,directions_]:=Module[{indx,indy},
 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*reduction towards an IndPol*)
 
 
@@ -208,10 +270,10 @@ Reduced[f_IndPol,g_IndPol,directions_,ordering_]:=Module[
 		restLT=LT[rest,directions,ordering];
 		If[IndMonDivisibleQ[restLT,gLT,directions],
 			q1=Division[restLT,gLT];(*perhaps, left/right division can affect performance*)
-			rest=Substract[rest,Act[q1,g]];
+			rest=Subtraction[rest,Act[q1,g]];
 			quotient=Add[quotient,q1]
 		,
-			rest=Substract[rest,restLT];
+			rest=Subtraction[rest,restLT];
 			remainder=Add[remainder,restLT];
 		]
 	];
@@ -219,7 +281,7 @@ Reduced[f_IndPol,g_IndPol,directions_,ordering_]:=Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*reduction towards an IndPolIdeal*)
 
 
@@ -252,7 +314,74 @@ Reduced[f_IndPol,g_IndPolIdeal,directions_,ordering_]:=Module[
 
 
 
+HReduced//ClearAll;
+HReduced[f_,g_,directions_,ordering_]:=Module[{res},
+	If[Head[g]===List,
+		res=Reduced[f//ToIndPol,IndPolIdeal[ToIndPol/@g],directions,ordering];
+		res={FromIndPol/@res[[1]],FromIndPol[res[[2]]]};
+	,
+		res=Reduced[f//ToIndPol,g//ToIndPol,directions,ordering];
+		res=FromIndPol/@res;
+	];
+	res
+]
+
+
+(* ::Subsection:: *)
+(*IndPolIdeal SelfReduction*)
+
+
+SelfReduction[g_IndPolIdeal,directions_,ordering_]:=Module[
+{
+gens=g//Generators,
+i=1,n=0,j=0,divisors,r,qs
+},
+	gens=Cornerized[#,directions]&/@gens;
+	While[True,
+		j++;(*for debug*)
+		If[Length[gens]<=1,Break[]];
+		If[i>Length[gens],i-=Length[gens]];(*loop*)
+		divisors=DeleteCases[gens,gens[[i]]];
+		{qs,r}=Reduced[gens[[i]],IndPolIdeal[divisors],directions,ordering];
+		r=Collected[r];(*is this needed?*)
+		r=Cornerized[r,directions];
+		(*Print["gens=",FromIndPol/@gens,"  r=",FromIndPol@r,"    i=",i];*)
+		If[r===ZERO,
+			(*Print["000"];*)
+			gens=divisors;
+			n=0;(*n counts for how many times that the division does nothing*)
+		,
+			
+			If[Subtraction[gens[[i]],r]===ZERO,
+				n++;(*nothing changes*)
+				(*Print["==="];*)
+			,
+				gens[[i]]=r;
+				(*Print["mmm"];*)
+				n=0
+			];
+			i++;(*moves the label if the i-th gen is not removed ( will be removed if r===0)*)
+		];
+		If[n>=Length[gens],Break[]];
+		If[j>10,Break[]]
+	];
+	IndPolIdeal[gens]
+	
+];
+(*human readable*)
+HSelfReduction[gens_,directions_,ordering_]:=FromIndPol/@Generators[SelfReduction[IndPolIdeal[ToIndPol/@gens],directions,ordering]]
 
 
 (* ::Section:: *)
 (*Draft*)
+
+
+TIMER=0;
+AbsoluteTiming[reduced=HSelfReduction[ibpVectors[[{2,1}]]/.numerics,Table[1,SDim],RevDegLexiGOrdering];]
+TIMER
+
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+
+
+reduced//Together
