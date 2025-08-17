@@ -29,40 +29,201 @@ StringReplace[%,"pow("~~Shortest[x__]~~")":>"Power["<>x<>"]"]//ToExpression;
 (*LatPol*)
 
 
+(* ::Subsubsection::Closed:: *)
+(*definition*)
+
+
 LatShifts[x_LatPol]:=x[[1]]
 ValueArray[x_LatPol]:=x[[2]]
 
 
-ToLatPol[expr_,latShifts_]:=LatPol[latShifts,
-Table[expr/.n->i+LATSHIFT,{i,1,10}]]
-
-
-FromLatPol[x_LatPol,n_]:=Sum[
-	x[[1,k]]*Product[
-		(n-i-LATSHIFT)/(k-i),
-		{i,DeleteCases[Range[Length[x[[1]]]],k]}
-	],
-	{k,Range[Length[x[[1]]]]}
+ToLatPol[expr_,vars_,dimensions_,latShifts_]:=Module[{v},
+	LatPol[
+		latShifts,
+		Table@@Join[
+			{expr},
+			Table[{vars[[j]],latShifts[[j]]+Range[dimensions[[j]]]},{j,Length[vars]}]
+		]
+	]
 ]
 
 
-FromLatPol[n//ToLatPol,11+LATSHIFT]
+(*Langrange interpolation*)
+FromLatPol[lp_LatPol,x_List]:=Module[{y,latShifts,k,dimensions},
+	latShifts=LatShifts[lp];
+	y=ValueArray[lp];
+	dimensions=Dimensions[y];
+	Total[
+		Array[
+			Times[	
+				Part[
+					y,
+					##
+				],
+				Product[
+					Product[
+						If[j=={##}[[i]],1,(x[[i]]-j-latShifts[[i]])/({##}[[i]]-j)],
+						{j,dimensions[[i]]}
+					],
+					{i,Length[dimensions]}
+				]
+				
+			]&,
+			dimensions
+		],
+		Length[dimensions]
+	]
+]
 
 
-MoveLeft[x_LatPol,distance_]:=Module[{},
-	Switch[Sign[distance],
-	0,
-		Return[x]
+(* ::Subsubsection::Closed:: *)
+(*truncation*)
+
+
+(*differencing in orders to find the real needed dimensions of the array*)
+ActualSingleVariateDimension[l_List]:=Module[{result=1,list=l},
+	If[l==={},Print["error:asvp01"];Return[$Failed]];
+	While[True,
+		If[Length[Union[list]]===1,Break[]];
+		list=Differences[list];(*assuming the lattice distance is always 1*)
+		result++;
+	];
+	result
+]
+Truncate[lp_LatPol,position_]:=Module[{powerArray,y,dimensions,maxDimension,truncY,latShifts},
+	latShifts=LatShifts[lp];
+	y=ValueArray[lp];
+	dimensions=Dimensions[y];
+	powerArray=Array[
+		ActualSingleVariateDimension[
+			Part[
+				y,
+				Insert[{##},All,position]/.List->Sequence
+			]
+		]&,
+		Delete[dimensions,position]
+	];
+	maxDimension=Max[powerArray];
+	truncY=Array[
+		Part[
+			y,
+			##
+		]&,
+		ReplacePart[dimensions,position->maxDimension]
+	];
+	LatPol[latShifts,truncY]
+]
+Truncate[lp_LatPol]:=Module[{latShifts,y,dimensions,position,result},
+	result=lp;
+	latShifts=LatShifts[lp];
+	y=ValueArray[lp];
+	dimensions=Dimensions[y];
+	For[position=1,position<=Length[dimensions],position++,
+		result=Truncate[result,position]
+	];
+	result
+]
+
+
+(* ::Subsubsection:: *)
+(*moving*)
+
+
+SingleVariateLatMove[lp_LatPol,position_,distance_]:=Module[{y,dimensions,positionWidth,oldArray,newArray,latShifts},
+	If[Head[distance]=!=Integer,Print["error: svlm_non_integer_distance"];Return[$Failed]];
+	If[distance===0,Return[lp]];
+	latShifts=LatShifts[lp];
+	y=ValueArray[lp];
+	dimensions=Dimensions[y];
+	positionWidth=dimensions[[position]];
+	If[Abs[distance]>=positionWidth,
+		newArray=Array[
+			FromLatPol[
+				lp,
+				{##}+
+				Table[
+					If[i==position,distance,0],
+					{i,Length[dimensions]}
+				]
+			]&,
+			dimensions
+		];
+		Return[LatPol[latShifts,newArray]];
 	,
-	1,
-		
-
-
+		If[distance>0,
+			newArray=Array[
+				FromLatPol[
+					lp,
+					{##}+
+					Table[
+						If[i==position,positionWidth,0],
+						{i,Length[dimensions]}
+					]
+				]&,
+				ReplacePart[dimensions,position->distance]
+			];
+			oldArray=Array[
+				Part[
+					y,
+					(
+						{##}+
+						Table[
+							If[i==position,distance,0],
+							{i,Length[dimensions]}
+						]
+					)/.List->Sequence
+				]&,
+				ReplacePart[dimensions,position->positionWidth-distance]
+			];
+			Return[
+				LatPol[
+					latShifts,
+					Join[oldArray,newArray,position]
+				]
+			];
+		,
+		(*else*)
+			newArray=Array[
+				FromLatPol[
+					lp,
+					{##}+
+					Table[
+						If[i==position,-Abs[distance],0],(*yes here is -distance *)
+						{i,Length[dimensions]}
+					]
+				]&,
+				ReplacePart[dimensions,position->Abs[distance]]
+			];
+			oldArray=Array[
+				Part[
+					y,
+					##
+				]&,
+				ReplacePart[dimensions,position->positionWidth-Abs[distance]]
+			];
+			Return[
+				LatPol[
+					latShifts,
+					Join[newArray,oldArray,position](*new array in the left*)
+				]
+			];
+		];
+	];
 ]
-(*what if n is very large?*)
-(*n\[Rule]n+1*)
 
 
+(*equivalent as pol/.Table[x[[i]]\[Rule]x[[i]]+indices[[i]]]*)
+LatMove[lp_LatPol,indices_]:=Module[{i,result},
+	result=lp;
+	For[i=1,i<=Length[indices],i++,
+		result=SingleVariateLatMove[result,i,indices[[i]]]
+	];
+	result
+]
+
+
+(* ::Subsubsection:: *)
+(**)
 
 
 (* ::Section:: *)
@@ -129,6 +290,21 @@ Inv[x_IndMon]:=IndMon[
 ]
 Division[x_IndMon,y_IndMon]:=Act[x,y//Inv]
 
+
+
+
+(* ::Subsubsection:: *)
+(*Amplification*)
+
+
+Amplify[lp_LatPol,a_]:=LatPol[lp//LatShifts,a*ValueArray[lp]]
+
+
+(* ::Subsubsection:: *)
+(*Add and Subtraction*)
+
+
+Add[lp1_LatPol,lp2_LatPol]:=Module[{},
 
 
 
