@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Global Variables*)
 
 
@@ -26,7 +26,7 @@ StringReplace[%,"pow("~~Shortest[x__]~~")":>"Power["<>x<>"]"]//ToExpression;
 (*Data Structures*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Simplifier*)
 
 
@@ -72,7 +72,7 @@ DebugTogether[x_]:=Module[{tmp},
 Simplifier=DebugTogether;
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*IndMon*)
 
 
@@ -161,12 +161,11 @@ Collected[x_IndPol,OptionsPattern[]]:=Module[
 (*Add and Subtraction*)
 
 
-
 Mns[x_IndPol]:=IndPol[Mns/@TermList[x]];
-Add[x_IndMon,y_IndMon]:=IndPol[{x,y}]//Collected
-Add[x_IndMon,y_IndPol]:=IndPol[Append[y//TermList,x]]//Collected
-Add[x_IndPol,y_IndMon]:=Add[y,x]//Collected
-Add[x_IndPol,y_IndPol]:=IndPol[Join[x//TermList,y//TermList]]//Collected
+Add[x_IndMon,y_IndMon]:=IndPol[{x,y}](*//Collected*)
+Add[x_IndMon,y_IndPol]:=IndPol[Append[y//TermList,x]](*//Collected*)
+Add[x_IndPol,y_IndMon]:=Add[y,x](*//Collected*)
+Add[x_IndPol,y_IndPol]:=IndPol[Join[x//TermList,y//TermList]](*//Collected*)
 
 Subtraction[x_IndMon,y_IndMon]:=Add[x,y//Mns]
 Subtraction[x_IndMon,y_IndPol]:=Add[x,y//Mns]
@@ -178,8 +177,8 @@ Subtraction[x_IndPol,y_IndPol]:=Add[x,y//Mns]
 (*Act*)
 
 
-Act[x_IndPol,y_IndMon]:=IndPol[Act[#,y]&/@TermList[x]]//Collected
-Act[x_IndMon,y_IndPol]:=IndPol[Act[x,#]&/@TermList[y]]//Collected
+Act[x_IndPol,y_IndMon]:=IndPol[Act[#,y]&/@TermList[x]](*//Collected*)
+Act[x_IndMon,y_IndPol]:=IndPol[Act[x,#]&/@TermList[y]](*//Collected*)
 Act[x_IndPol,y_IndPol]:=Module[{xTerms=x//TermList,yTerms=y//TermList},
 	IndPol[
 		Table[
@@ -188,7 +187,7 @@ Act[x_IndPol,y_IndPol]:=Module[{xTerms=x//TermList,yTerms=y//TermList},
 			{j,Length[yTerms]}
 		]//Flatten
 	]
-]//Collected
+](*//Collected*)
 Devision[x_IndPol,y_IndMon]:=Act[x,y//Inv]
 
 
@@ -212,6 +211,7 @@ RevDegLexiGOrdering[x_]:=Module[
 
 
 
+(*I will not use this -- 2025.8.19*)
 LT//ClearAll
 LTCOUNTER=0;(*for debug*)
 LT[x_IndPol,directions_,ordering_]:=(LTCOUNTER++;SortBy[
@@ -221,13 +221,45 @@ LT[x_IndPol,directions_,ordering_]:=(LTCOUNTER++;SortBy[
 )
 
 
+SemiCollectToLT[x_IndPol,directions_,ordering_]:=Module[
+{terms=x//TermList,termsGrouped,termsGroupedSorted,
+apparentLTIndex,apparentLTCoeff,finalLT,semicollectedIndPol
+},
+	LTCOUNTER++;
+	If[terms==={},Return[{ZERO,ZERO}]];
+	termsGrouped=GatherBy[terms,Indices];
+	termsGroupedSorted=SortBy[
+		termsGrouped,
+		ordering[DiagonalMatrix[directions].(#[[1]]//Indices)]&
+	];
+	termsGroupedSorted=termsGroupedSorted//Reverse;
+	While[True,
+		apparentLTIndex=termsGroupedSorted[[1,1]]//Indices;
+		apparentLTCoeff=Total[Coeff/@termsGroupedSorted[[1]]]//Simplifier;
+		termsGroupedSorted=termsGroupedSorted[[2;;-1]];
+		If[apparentLTCoeff=!=0,Break[]];
+		If[Length[termsGroupedSorted]===0,
+			Return[{ZERO,ZERO}]
+		]
+	];
+	finalLT=IndMon[apparentLTCoeff,apparentLTIndex];
+	termsGroupedSorted=Join[{
+		{finalLT}
+	},termsGroupedSorted];
+	semicollectedIndPol=IndPol[Flatten[termsGroupedSorted]];
+	{semicollectedIndPol,finalLT}
+
+]
+HSemiCollectToLT[x_,directions_,ordering_]:=FromIndPol/@SemiCollectToLT[x//ToIndPol,directions,ordering]
+
+
 (* ::Subsubsection:: *)
 (*Cornerized*)
 
 
 Cornerized//ClearAll
 Cornerized[xx_IndPol,directions_]:=Module[{refMon,indices,refInd,x},
-	x=Collected[x,Simplification->True];
+	x=Collected[xx,Simplification->True];
 	If[x===ZERO,Return[ZERO]];
 	indices=Indices/@(x//TermList);
 	indices=DiagonalMatrix[directions].#&/@indices;
@@ -243,7 +275,7 @@ Cornerized[xx_IndPol,directions_]:=Module[{refMon,indices,refInd,x},
 (*Polynomial Division with remainder*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Divisible Q*)
 
 
@@ -267,14 +299,28 @@ Reduced[f_IndPol,g_IndPol,directions_,ordering_]:=Module[
 	rest=f;
 	quotient=ZERO;
 	remainder=ZERO;
-	gLT=LT[Collected[g,Simplification->True],directions,ordering];
+	
+	(*gLT=LT[Collected[g,Simplification->True],directions,ordering];*)
+	
+	(*above replaced by the following*)
+	
+	{g,gLT}=SemiCollectToLT[g,directions,ordering];
+	
 	While[True,
+	
 		(*Print["          ",loopCounter," : ",LTCOUNTER," : ",COUNTER];
 		loopCounter++;
 		If[loopCounter\[GreaterEqual]5000,Break[]];*)
-		rest=Collected[rest,Simplification->True];
+		
+		(*rest=Collected[rest,Simplification->True];
 		If[rest===ZERO,Break[]];
-		restLT=LT[rest,directions,ordering];
+		restLT=LT[rest,directions,ordering];*)
+		
+		(*above replaced by the following*)
+		
+		{rest,restLT}=SemiCollectToLT[rest,directions,ordering];
+		If[rest===ZERO,Break[]];
+		
 		If[IndMonDivisibleQ[restLT,gLT,directions],
 			q1=Division[restLT,gLT];(*perhaps, left/right division can affect performance*)
 			rest=Subtraction[rest,Act[q1,g]];
@@ -288,7 +334,7 @@ Reduced[f_IndPol,g_IndPol,directions_,ordering_]:=Module[
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*reduction towards an IndPolIdeal*)
 
 
@@ -353,7 +399,7 @@ i=1,n=0,j=0,divisors,r,qs
 	While[True,
 		Print[loopCounter," : ",LTCOUNTER," : ",COUNTER];
 		loopCounter++;
-		If[loopCounter>=5,Break[]];
+		(*If[loopCounter>=5,Break[]];*)
 		j++;(*for debug*)
 		If[Length[gens]<=1,Break[]];
 		If[i>Length[gens],i-=Length[gens]];(*loop*)
@@ -413,13 +459,16 @@ Select[SimplificationTimers,#<0.001&]//Total
 SimplificationTimers//Total
 
 
+HReduced[reduced[[3]],{reduced[[1]]},Table[1,SDim],RevDegLexiGOrdering]
+
+
 Select[SimplificationTimers,#>0.001&]//Length
 
 
 %497/4166
 
 
-Histogram[Select[SimplificationTimers,#>0.001&]]
+Histogram[Select[SimplificationTimers,#>1&]]
 
 
 reduced//Together
