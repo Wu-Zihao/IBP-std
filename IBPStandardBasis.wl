@@ -350,7 +350,7 @@ Cornerized[xx_IndPol,directions_,OptionsPattern[]]:=Module[{refMon,indices,refIn
 
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Polynomial Division with remainder*)
 
 
@@ -604,7 +604,7 @@ HIndPolMatrixDotActOnList[x_List,y_List]:=FromIndPol/@IndPolMatrixDotActOnList[
 
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*IndPolIdeal SelfReduction*)
 
 
@@ -745,8 +745,14 @@ HSelfReduction[gens_,directions_,ordering_,OptionsPattern[]]:=Module[{reduction,
 ]
 
 
-(* ::Section:: *)
-(*Draft*)
+.
+
+
+0\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]\[AliasDelimiter]
+
+
+(* ::Section::Closed:: *)
+(*0Draft*)
 
 
 ResetTimerAndCounters[]:=(
@@ -823,7 +829,7 @@ Histogram[Select[SimplificationTimers,#>1&]]
 reduced//Together
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*LatticeRational (not used, all commented out)*)
 
 
